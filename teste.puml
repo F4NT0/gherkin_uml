@@ -1,0 +1,39 @@
+@startuml
+actor "User" as user
+node "Frontend - React Js" as front{
+  [Pages] as pg
+  [Components] as comp
+  [APIService] as api
+  [Map] as map
+  [ServiceWorker (PWA, Notificações)] as sw
+}
+user <-d-> pg
+pg <-d-> comp
+comp <-d-> map
+comp <-l-> api
+node "Backend - Spring Boot" as back {
+  [Routes] as route
+  [Controllers] as cont
+  [Services] as service
+  [DTOs] as dto
+  [Repositories] as repo
+  [Notification Service] as ns
+}
+route <-d-> api
+route <-d-> cont
+cont <-d-> service
+cont <-> ns
+dto -> service
+service -> repo
+repo -> dto
+database PostgreSQL as db
+db <-u-> repo
+[vault] as vault
+vault <-d-> front
+vault <-d-> back
+[Firebase Cloud Message] as fcm
+[Google Maps API] as gma
+map <-d-> gma
+fcm <-d-> sw
+fcm <-u-> ns
+@enduml
