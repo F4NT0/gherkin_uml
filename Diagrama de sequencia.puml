@@ -1,0 +1,54 @@
+@startuml
+autonumber
+
+actor User as user
+participant "Mobile app" as mobile
+participant "Nginx Gateway" as nginx
+participant "Backend API" as api
+participant "Vault" as vault
+participant "Embedded System" as embedded
+participant "Relational database" as sqldb
+participant "Realtime database" as firebase
+
+
+alt Application start up
+    api -> vault : Method: Approle (Role_ID, Role_Secret)
+    alt Request Authentication
+        api <- vault : Access token
+    else Authentication failed
+        api <- vault : Permission denied
+    end
+
+    api -> vault : Request environment variables
+    api <- vault : Return requested environment variables
+end
+
+user -> mobile : Request login (e-mail, password)
+mobile -> nginx : Request api redirection
+nginx -> api : Redirect request
+api -> sqldb : Query user identity
+alt Validate user
+    sqldb -> api : Return user entity
+    api -> mobile: Return access token
+else Failed user validation
+    sqldb -> api : Return null entity object
+    api -> mobile: Access denied
+end
+
+mobile -> nginx : Request redirection
+nginx -> api : Redirect request
+api -> sqldb: Query map content such as percentages, buildings and trashs
+api -> mobile : Return buildings, trash holds and percentages
+mobile -> user : Expose map content interface
+
+alt loop
+    embedded -> embedded : sleep
+    embedded -> api : Trash hold content percentage
+    alt Trigger notification value
+        api -> firebase : Insert on notification table
+        mobile <- firebase : Realtime update on mobile application
+        mobile -> user : Trigger mobile notification
+    end
+end
+
+@enduml
